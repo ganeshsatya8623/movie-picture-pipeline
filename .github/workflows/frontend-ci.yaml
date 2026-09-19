@@ -3,18 +3,17 @@ name: Frontend Continuous Integration
 on:
   pull_request:
     branches:
-      - master
+      - main
+    paths:
+      - 'starter/frontend/**'
+      - '.github/workflows/frontend-ci.yaml'
   workflow_dispatch:
 
 env:
-  AWS_REGION: us-east-1
-  ECR_REPOSITORY: frontend
+  REACT_APP_MOVIE_API_URL: http://localhost:5000
 
 jobs:
 
-  # =========================
-  # LINT JOB
-  # =========================
   lint:
     name: Lint Frontend
     runs-on: ubuntu-latest
@@ -45,13 +44,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run Lint
+      - name: Run lint
         run: npm run lint
 
 
-  # =========================
-  # TEST JOB
-  # =========================
   test:
     name: Test Frontend
     runs-on: ubuntu-latest
@@ -82,13 +78,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run Tests
-        run: npm run test -- --watchAll=false
+      - name: Run tests
+        run: CI=true npm test -- --watchAll=false
 
 
-  # =========================
-  # BUILD DOCKER IMAGE
-  # =========================
   build:
     name: Build Frontend Docker Image
     runs-on: ubuntu-latest
@@ -105,29 +98,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-          cache: npm
-          cache-dependency-path: starter/frontend/package-lock.json
-
-      - name: Cache npm dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('starter/frontend/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run Tests
-        run: npm run test -- --watchAll=false
-
-      - name: Build Frontend Docker Image
+      - name: Build Docker image
         run: |
           docker build \
-            --build-arg REACT_APP_MOVIE_API_URL=${{ secrets.REACT_APP_MOVIE_API_URL }} \
+            --build-arg REACT_APP_MOVIE_API_URL=${{ env.REACT_APP_MOVIE_API_URL }} \
             --tag frontend:latest .
