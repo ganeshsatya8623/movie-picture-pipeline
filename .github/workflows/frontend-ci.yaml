@@ -103,3 +103,4 @@ jobs:
           docker build \
             --build-arg REACT_APP_MOVIE_API_URL=${{ env.REACT_APP_MOVIE_API_URL }} \
             --tag frontend:latest .
+# Test pull request trigger
